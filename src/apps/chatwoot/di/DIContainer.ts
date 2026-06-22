@@ -84,6 +84,13 @@ export class DIContainer {
         with_credentials: true,
         credentials: 'include',
         token: this.config.accountToken,
+        headers: {
+          // Send both header variants for compatibility: some Chatwoot versions
+          // accept only "Api-Access-Token" (the SDK >=1.1.17 default) and
+          // older ones only "api_access_token".
+          'api_access_token': this.config.accountToken,
+          'Api-Access-Token': this.config.accountToken,
+        },
       },
     });
   }
@@ -100,6 +107,11 @@ export class DIContainer {
         with_credentials: true,
         credentials: 'include',
         token: this.config.inboxIdentifier,
+        headers: {
+          // Send both header variants for compatibility
+          'api_access_token': this.config.inboxIdentifier,
+          'Api-Access-Token': this.config.inboxIdentifier,
+        },
       },
     });
     return chatwootClientAPI.client as ChatWootInboxAPI;
