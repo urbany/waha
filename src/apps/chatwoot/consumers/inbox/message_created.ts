@@ -82,6 +82,10 @@ export class MessageHandler {
   async handle(body: any) {
     const chatId = await LookupAndCheckChatId(this.session, body);
     const message = body;
+    // Chatwoot's message_created webhook puts a minimal sender object at the
+    // top level, but the richer sender (with available_name) is inside
+    // conversation.messages. Merge it so templates can use chatwoot.sender.available_name.
+    this.enrichSender(body);
     if (
       message.content_type != 'text' &&
       message.content_type != 'input_csat'
@@ -307,5 +311,22 @@ export class MessageHandler {
       mentions: mentions,
     };
     return session.sendFile(fileRequest);
+  }
+
+  private enrichSender(body: any): void {
+    if (!body.sender) {
+      return;
+    }
+    const messages = body.conversation?.messages;
+    if (!Array.isArray(messages) || messages.length === 0) {
+      return;
+    }
+    const richSender = messages.find(
+      (m) => m.sender && m.sender.id === body.sender.id,
+    )?.sender;
+    if (!richSender) {
+      return;
+    }
+    body.sender = { ...body.sender, ...richSender };
   }
 }
